@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables
+.env
+*/.env
+
+# Database data
+data/
+*/data/
+
+# Admin panel (KEEP PRIVATE)
+frontend/admin/
+backend/routes/adminAuth.js
+backend/models/Admin.js
+backend/middleware/auth.js
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
