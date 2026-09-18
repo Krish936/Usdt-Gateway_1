@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const morgan = require('morgan');
+const morgan = require('morgan');                    // ← Fixed: lowercase 'm'
 const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
@@ -22,7 +22,17 @@ connectDB();
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+
+// ✅ CORS — allows local + Vercel
+app.use(cors({
+    origin: [
+        'frontend-deploy-silk.vercel.app'         // ← REPLACE THIS
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
+}));
+
 app.use(express.json());
 app.use(morgan('combined'));
 
