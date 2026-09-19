@@ -15,6 +15,7 @@ frontend/admin/
 backend/routes/adminAuth.js
 backend/models/Admin.js
 backend/middleware/auth.js
+!backend/middleware/userAuthMiddleware.js
 
 # Logs
 *.log
@@ -27,3 +28,6 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+admin.html
+frontend/admin.html

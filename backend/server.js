@@ -1,12 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const morgan = require('morgan');                    // ← Fixed: lowercase 'm'
+const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
 const apiRoutes = require('./routes/api');
-const adminAuthRoutes = require('./routes/adminAuth');
 const userAuthRoutes = require('./routes/userAuth');
 
 dotenv.config();
@@ -20,13 +19,19 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
-// Middleware
+// Trust proxy (needed for Vercel/Render)
+app.set('trust proxy', 1);
+
+// Security middleware
 app.use(helmet());
 
-// ✅ CORS — allows local + Vercel
+// CORS — allow local + deployed frontends
 app.use(cors({
     origin: [
-        'frontend-deploy-silk.vercel.app'         // ← REPLACE THIS
+        'http://localhost:8080',
+        'http://127.0.0.1:8080',
+        'https://frontend-deploy-silk.vercel.app',
+        'https://krish936.github.io'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -43,20 +48,50 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Routes
-app.use('/api', apiRoutes);                    // Core USDT gateway routes
-app.use('/api/admin/auth', adminAuthRoutes);   // Admin authentication
-app.use('/api/user/auth', userAuthRoutes);     // User authentication
+// ============================================================
+// ROUTES
+// ============================================================
 
-// Test route
+// User-facing routes (always available)
+app.use('/api', apiRoutes);
+app.use('/api/user/auth', userAuthRoutes);
+
+// Admin routes — only load if the file exists (private, not on GitHub)
+let adminAuthRoutes;
+try {
+    adminAuthRoutes = require('./routes/adminAuth');
+    app.use('/api/admin/auth', adminAuthRoutes);
+    console.log('✅ Admin routes loaded');
+} catch (error) {
+    console.log('⚠️  Admin routes not available — running in user-only mode');
+    console.log('   (This is expected on deployed environment)');
+}
+
+// ============================================================
+// HEALTH CHECK & ROOT ROUTES
+// ============================================================
+
 app.get('/', (req, res) => {
     res.json({ 
         message: 'USDT Gateway API is running',
-        status: 'active'
+        status: 'active',
+        mode: adminAuthRoutes ? 'full' : 'user-only',
+        timestamp: new Date().toISOString()
     });
 });
 
-// Error handling
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'healthy',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+});
+
+// ============================================================
+// ERROR HANDLING
+// ============================================================
+
 app.use((err, req, res, next) => {
     console.error('Error:', err.stack);
     res.status(500).json({
@@ -65,11 +100,24 @@ app.use((err, req, res, next) => {
     });
 });
 
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: 'Route not found: ' + req.method + ' ' + req.path
+    });
+});
+
+// ============================================================
+// START SERVER
+// ============================================================
+
 const PORT = process.env.PORT || 5001;
 
 const server = app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT}`);
     console.log(`🌐 API URL: http://localhost:${PORT}`);
+    console.log(`📊 Mode: ${adminAuthRoutes ? 'Full (User + Admin)' : 'User-only'}`);
 });
 
 server.on('error', (error) => {

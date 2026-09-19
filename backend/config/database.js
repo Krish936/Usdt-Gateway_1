@@ -1,48 +1,39 @@
 const mongoose = require('mongoose');
-const path = require('path');
-const fs = require('fs');
 
 const connectDB = async () => {
     try {
-        let mongoURI = process.env.MONGODB_URI;
+        const uri = process.env.MONGODB_URI;
         
-        // Ensure data directory exists
-        const dataDir = path.join(__dirname, '..', 'data', 'mongodb');
-        if (!fs.existsSync(dataDir)) {
-            fs.mkdirSync(dataDir, { recursive: true });
+        // Debug output
+        console.log('📋 MONGODB_URI starts with:', uri ? uri.substring(0, 30) + '...' : 'NOT SET');
+        
+        // Validate the URI format
+        if (!uri) {
+            throw new Error('MONGODB_URI is not set in .env file');
         }
         
-        // Check if we should use in-memory MongoDB
-        const useMemoryDB = !mongoURI || 
-                           mongoURI.includes('127.0.0.1') || 
-                           mongoURI.includes('localhost') ||
-                           process.env.USE_MEMORY_DB === 'true';
-        
-        if (useMemoryDB) {
-            console.log('📦 Starting persistent MongoDB...');
-            const { MongoMemoryServer } = require('mongodb-memory-server');
-            
-            const mongod = await MongoMemoryServer.create({
-                instance: {
-                    dbPath: dataDir,
-                    storageEngine: 'wiredTiger'
-                }
-            });
-            
-            mongoURI = mongod.getUri();
-            console.log('✅ Persistent MongoDB started');
-            console.log('💾 Data directory:', dataDir);
+        if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+            throw new Error(
+                'Invalid MONGODB_URI format. Must start with "mongodb://" or "mongodb+srv://"\n' +
+                'Current value starts with: ' + uri.substring(0, 30)
+            );
         }
         
-        const conn = await mongoose.connect(mongoURI);
+        // Connect to MongoDB
+        const conn = await mongoose.connect(uri);
+        
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-        
-        global.mongooseConnection = conn;
+        console.log(`📊 Database: ${conn.connection.name}`);
         
     } catch (error) {
         console.error(`❌ MongoDB Error: ${error.message}`);
-        console.log('⚠️  Continuing without database');
-        global.mongooseConnection = null;
+        
+        // Don't crash in dev mode — let the server run for debugging
+        if (process.env.NODE_ENV === 'production') {
+            process.exit(1);
+        } else {
+            console.log('⚠️  Continuing without database (development mode)');
+        }
     }
 };
 
