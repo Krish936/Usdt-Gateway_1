@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
-const authMiddleware = require('../middleware/auth');
+const authMiddleware = require('../middleware/userAuthMiddleware');
 
 /* ============================================================
    REGISTER — New user signup (wallet optional)
