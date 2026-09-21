@@ -10,24 +10,31 @@ node_modules/
 data/
 */data/
 
-# Admin panel (KEEP PRIVATE)
+# Admin files (private)
 frontend/admin/
+frontend/admin.html
+admin.html
 backend/routes/adminAuth.js
 backend/models/Admin.js
 backend/middleware/auth.js
-!backend/middleware/userAuthMiddleware.js
 
 # Logs
 *.log
 npm-debug.log*
 
-# OS
+# OS files
 .DS_Store
+**/.DS_Store
 Thumbs.db
 
 # Editor
 .vscode/
-.idea/
+**/.vscode/
 
-admin.html
-frontend/admin.html
+# Test/dev scripts
+backend/test-ethers.js
+backend/clear-test-data.js
+backend/userAuthMiddleware.js
+
+# Other
+pipelines/
