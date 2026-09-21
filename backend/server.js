@@ -30,8 +30,7 @@ app.use(cors({
     origin: [
         'http://localhost:8080',
         'http://127.0.0.1:8080',
-        'https://frontend-deploy-silk.vercel.app',
-        'https://krish936.github.io'
+        'https://krish936.github.io/Usdt-Gateway_1/'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
